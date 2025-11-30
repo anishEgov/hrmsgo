@@ -7,7 +7,6 @@ import "time"
 type EmployeePatch struct {
 	ID                string     `json:"id,omitempty"`
 	Code              *string    `json:"code,omitempty"`
-	Name              *string    `json:"name,omitempty"`
 	DateOfBirth       *time.Time `json:"dateOfBirth,omitempty"`
 	Gender            *string    `json:"gender,omitempty"`
 	MobileNumber      *string    `json:"mobileNumber,omitempty"`

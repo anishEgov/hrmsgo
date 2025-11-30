@@ -3,8 +3,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -126,11 +124,8 @@ func (r *jurisdictionRepository) Search(ctx context.Context, criteria *models.Ju
 		tx = tx.Where("employee_id IN ?", criteria.EmployeeIDs)
 	}
 
-	if len(criteria.BoundaryRelations) > 0 {
-		// Using GORM's JSONB contains operator
-		for _, code := range criteria.BoundaryRelations {
-			tx = tx.Where("boundary_relation @> ?", json.RawMessage(fmt.Sprintf(`["%s"]`, code)))
-		}
+	if criteria.EmployeeID != "" {
+		tx = tx.Where("employee_id = ?", criteria.EmployeeID)
 	}
 
 	if criteria.IsActive != nil {

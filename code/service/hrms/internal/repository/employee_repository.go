@@ -110,9 +110,6 @@ func (r *employeeRepository) Search(ctx context.Context, criteria *models.Employ
 	tx := r.db.WithContext(ctx).Model(&models.Employee{}).Where("tenant_id = ?", criteria.TenantID)
 
 	// Apply filters
-	if len(criteria.IDs) > 0 {
-		tx = tx.Where("id IN ?", criteria.IDs)
-	}
 
 	if len(criteria.UUIDs) > 0 {
 		tx = tx.Where("id IN ?", criteria.UUIDs)
@@ -122,20 +119,20 @@ func (r *employeeRepository) Search(ctx context.Context, criteria *models.Employ
 		tx = tx.Where("code IN ?", criteria.Codes)
 	}
 
-	if len(criteria.Status) > 0 {
-		tx = tx.Where("status IN ?", criteria.Status)
-	}
-
-	if len(criteria.EmployeeTypes) > 0 {
-		tx = tx.Where("employee_type IN ?", criteria.EmployeeTypes)
-	}
-
 	if len(criteria.Departments) > 0 {
 		tx = tx.Where("department_id IN ?", criteria.Departments)
 	}
 
 	if len(criteria.Designations) > 0 {
 		tx = tx.Where("designation_id IN ?", criteria.Designations)
+	}
+
+	if criteria.Phone != "" {
+		tx = tx.Where("mobile_number = ?", criteria.Phone)
+	}
+
+	if criteria.IsActive != nil {
+		tx = tx.Where("is_active = ?", *criteria.IsActive)
 	}
 
 	// Apply sorting

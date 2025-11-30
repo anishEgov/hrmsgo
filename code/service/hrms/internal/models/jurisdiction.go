@@ -45,13 +45,13 @@ type JurisdictionResponse struct {
 
 // JurisdictionSearchCriteria represents the search criteria for jurisdictions
 type JurisdictionSearchCriteria struct {
-	IDs               []string `form:"ids"`
-	EmployeeIDs       []string `form:"employeeIds"`
-	BoundaryRelations []string `form:"boundaryRelation"`
-	IsActive          *bool    `form:"isActive"`
-	Limit             int      `form:"limit,default=10"`
-	Offset            int      `form:"offset,default=0"`
-	SortBy            string   `form:"sortBy,default=createdAt"`
-	SortOrder         string   `form:"sortOrder,default=desc"`
-	TenantID          string
+	IDs         []string `form:"ids"`
+	EmployeeID  string   `form:"employeeId"`
+	EmployeeIDs []string `form:"employeeIds"`
+	IsActive    *bool    `form:"isActive"`
+	Limit       int      `form:"limit,default=10"`
+	Offset      int      `form:"offset,default=0"`
+	SortBy      string   `form:"sortBy,default=createdAt"`
+	SortOrder   string   `form:"sortOrder,default=desc"`
+	TenantID    string
 }

@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -55,12 +54,7 @@ func (h *JurisdictionHandler) SearchJurisdictions(c *gin.Context) {
 	if employeeID := c.Query("employeeId"); employeeID != "" {
 		criteria.EmployeeIDs = []string{employeeID}
 	}
-	// boundaryRelation
-	if relations := c.QueryArray("boundaryRelation"); len(relations) > 0 {
-		for _, r := range relations {
-			criteria.BoundaryRelations = append(criteria.BoundaryRelations, strings.Split(r, ",")...)
-		}
-	}
+
 	if isActive := c.Query("isActive"); isActive != "" {
 		active := isActive == "true"
 		criteria.IsActive = &active

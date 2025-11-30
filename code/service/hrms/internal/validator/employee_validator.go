@@ -59,11 +59,11 @@ func (v *EmployeeValidator) ValidateCreate(ctx context.Context, emp *models.Empl
 		return fmt.Errorf("invalid employee type: %s. Must be one of: PERMANENT, CONTRACT, TEMPORARY", emp.EmployeeType)
 	}
 
-	if emp.DepartmentID == "" {
+	if emp.Department == "" {
 		return fmt.Errorf("department is required")
 	}
 
-	if emp.DesignationID == "" {
+	if emp.Designation == "" {
 		return fmt.Errorf("designation is required")
 	}
 
@@ -72,16 +72,6 @@ func (v *EmployeeValidator) ValidateCreate(ctx context.Context, emp *models.Empl
 		if len(emp.Code) < 2 || len(emp.Code) > 64 {
 			return fmt.Errorf("code must be between 2 and 64 characters")
 		}
-	}
-
-	// Validate email format if provided
-	if emp.Email != "" && !emailRegex.MatchString(emp.Email) {
-		return fmt.Errorf("invalid email format")
-	}
-
-	// Validate phone number format if provided
-	if emp.MobileNumber != "" && !phoneRegex.MatchString(emp.MobileNumber) {
-		return fmt.Errorf("invalid mobile number format. Must be a 10-digit number starting with 6-9")
 	}
 
 	// Check for duplicate employee code
@@ -100,45 +90,29 @@ func (v *EmployeeValidator) ValidateUpdate(ctx context.Context, emp *models.Empl
 	if existing == nil {
 		return fmt.Errorf("employee not found")
 	}
-
-	// Validate field formats and constraints
-	if emp.Code != "" && emp.Code != existing.Code {
-		// Check for duplicate employee code
-		existingWithCode, err := v.repo.FindByCode(ctx, emp.Code, emp.TenantID)
-		if err == nil && existingWithCode != nil && existingWithCode.ID != emp.ID {
-			return fmt.Errorf("employee with code %s already exists", emp.Code)
-		}
-	}
-
-	// Validate email format if provided
-	if emp.Email != "" && emp.Email != existing.Email {
-		if !emailRegex.MatchString(emp.Email) {
-			return fmt.Errorf("invalid email format")
-		}
-	}
-
-	// Validate phone number format if provided
-	if emp.MobileNumber != "" && emp.MobileNumber != existing.MobileNumber {
-		if !phoneRegex.MatchString(emp.MobileNumber) {
-			return fmt.Errorf("invalid mobile number format. Must be a 10-digit number starting with 6-9")
-		}
-	}
-
 	return nil
 }
 
 // ValidatePatch validates a partial employee update
 func (v *EmployeeValidator) ValidatePatch(patch *models.UpdateEmployeeRequest) error {
-	if patch.Code != nil && (*patch.Code == "" || len(*patch.Code) < 2 || len(*patch.Code) > 64) {
-		return fmt.Errorf("code must be between 2 and 64 characters")
+	if patch.EmployeeType != nil {
+		if !isValidEmployeeType(*patch.EmployeeType) {
+			return fmt.Errorf("invalid employee type: %s. Must be one of: PERMANENT, CONTRACT, TEMPORARY", *patch.EmployeeType)
+		}
 	}
 
-	if patch.Email != nil && !emailRegex.MatchString(*patch.Email) {
-		return fmt.Errorf("invalid email format")
+	if patch.EmployeeStatus != nil {
+		if !isValidEmployeeStatus(*patch.EmployeeStatus) {
+			return fmt.Errorf("invalid employee status: %s. Must be one of: ACTIVE, INACTIVE, SUSPENDED", *patch.EmployeeStatus)
+		}
 	}
 
-	if patch.MobileNumber != nil && !phoneRegex.MatchString(*patch.MobileNumber) {
+	if patch.Phone != nil && !phoneRegex.MatchString(*patch.Phone) {
 		return fmt.Errorf("invalid mobile number format. Must be a 10-digit number starting with 6-9")
+	}
+
+	if patch.EmailId != nil && !emailRegex.MatchString(*patch.EmailId) {
+		return fmt.Errorf("invalid email format")
 	}
 
 	return nil
@@ -163,7 +137,6 @@ func (v *EmployeeValidator) ValidateSearch(ctx context.Context, criteria *models
 	if criteria.SortBy != "" {
 		validSortFields := map[string]bool{
 			"code":        true,
-			"name":        true,
 			"createdAt":   true,
 			"updatedAt":   true,
 			"employeeType": true,
