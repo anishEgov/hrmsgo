@@ -35,11 +35,12 @@ func NewJurisdictionRepository(db *gorm.DB) JurisdictionRepository {
 func (r *jurisdictionRepository) Create(ctx context.Context, jurisdiction *models.Jurisdiction) error {
 	// Set timestamps
 	now := time.Now()
-	jurisdiction.CreatedAt = now
-	jurisdiction.UpdatedAt = now
+	jurisdiction.CreatedTime = now.Unix()
+	lastModTime := now.Unix()
+	jurisdiction.LastModifiedTime = &lastModTime
 
 	// Create the record using GORM
-	tx := r.db.WithContext(ctx).Create(jurisdiction)
+	tx := r.db.WithContext(ctx).Model(&models.Jurisdiction{}).Create(jurisdiction)
 	if tx.Error != nil {
 		return errors.Wrap(tx.Error, "DATABASE_ERROR", "failed to create jurisdiction")
 	}
@@ -48,7 +49,7 @@ func (r *jurisdictionRepository) Create(ctx context.Context, jurisdiction *model
 
 func (r *jurisdictionRepository) FindByID(ctx context.Context, id, tenantID string) (*models.Jurisdiction, error) {
 	var jurisdiction models.Jurisdiction
-	tx := r.db.WithContext(ctx).
+	tx := r.db.WithContext(ctx).Model(&models.Jurisdiction{}).
 		Where("id = ? AND tenant_id = ?", id, tenantID).
 		First(&jurisdiction)
 
@@ -64,7 +65,7 @@ func (r *jurisdictionRepository) FindByID(ctx context.Context, id, tenantID stri
 
 func (r *jurisdictionRepository) FindByUUID(ctx context.Context, uuid, tenantID string) (*models.Jurisdiction, error) {
 	var jurisdiction models.Jurisdiction
-	tx := r.db.WithContext(ctx).
+	tx := r.db.WithContext(ctx).Model(&models.Jurisdiction{}).
 		Where("id = ? AND tenant_id = ?", uuid, tenantID).
 		First(&jurisdiction)
 
@@ -79,10 +80,15 @@ func (r *jurisdictionRepository) FindByUUID(ctx context.Context, uuid, tenantID 
 }
 
 func (r *jurisdictionRepository) Update(ctx context.Context, jurisdiction *models.Jurisdiction) error {
-	jurisdiction.UpdatedAt = time.Now()
-	tx := r.db.WithContext(ctx).Save(jurisdiction)
+	now := time.Now()
+	lastModTime := now.Unix()
+	jurisdiction.LastModifiedTime = &lastModTime
+	tx := r.db.WithContext(ctx).Model(&models.Jurisdiction{}).Where("id = ?", jurisdiction.ID).Updates(jurisdiction)
 	if tx.Error != nil {
 		return errors.Wrap(tx.Error, "DATABASE_ERROR", "failed to update jurisdiction")
+	}
+	if tx.RowsAffected == 0 {
+		return errors.ErrNotFound.WithDescription("jurisdiction not found")
 	}
 	return nil
 }
@@ -91,15 +97,15 @@ func (r *jurisdictionRepository) Delete(ctx context.Context, id, tenantID string
 	tx := r.db.WithContext(ctx).
 		Where("id = ? AND tenant_id = ?", id, tenantID).
 		Delete(&models.Jurisdiction{})
-	
+
 	if tx.Error != nil {
 		return errors.Wrap(tx.Error, "DATABASE_ERROR", "failed to delete jurisdiction")
 	}
-	
+
 	if tx.RowsAffected == 0 {
 		return errors.ErrNotFound.WithDescription("jurisdiction not found")
 	}
-	
+
 	return nil
 }
 
@@ -158,7 +164,7 @@ func (r *jurisdictionRepository) Search(ctx context.Context, criteria *models.Ju
 
 func (r *jurisdictionRepository) FindByEmployeeID(ctx context.Context, employeeID, tenantID string) ([]*models.Jurisdiction, error) {
 	var jurisdictions []*models.Jurisdiction
-	tx := r.db.WithContext(ctx).
+	tx := r.db.WithContext(ctx).Model(&models.Jurisdiction{}).
 		Where("employee_id = ? AND tenant_id = ?", employeeID, tenantID).
 		Find(&jurisdictions)
 

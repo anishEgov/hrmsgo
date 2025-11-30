@@ -32,34 +32,35 @@ func NewJurisdictionService(repo repository.JurisdictionRepository, employeeSvc 
 }
 
 func (s *jurisdictionService) CreateJurisdiction(ctx context.Context, req *models.CreateJurisdictionRequest, tenantID string) (*models.JurisdictionResponse, error) {
-    // Validate boundary codes
-    if err := s.validateBoundaryCodes(ctx, tenantID, req.BoundaryRelation); err != nil {
-        return nil, err
-    }
+	// Validate boundary codes
+	// if err := s.validateBoundaryCodes(ctx, tenantID, req.BoundaryRelation); err != nil {
+	// 	return nil, err
+	// }
 
-    // Create jurisdiction model
-    now := time.Now()
-    jurisdiction := &models.Jurisdiction{
-        ID:               uuid.New().String(),
-        EmployeeID:       req.EmployeeID,
-        BoundaryRelation: req.BoundaryRelation,
-        IsActive:         true, // Default to true if not provided
-        TenantID:         tenantID,
-        CreatedAt:        now,
-        UpdatedAt:        now,
-    }
+	// Create jurisdiction model
+	now := time.Now()
+	lastModTime := now.Unix()
+	jurisdiction := &models.Jurisdiction{
+		ID:               uuid.New().String(),
+		EmployeeID:       req.EmployeeID,
+		BoundaryRelation: req.BoundaryRelation,
+		IsActive:         true, // Default to true if not provided
+		TenantID:         tenantID,
+		CreatedTime:      now.Unix(),
+		LastModifiedTime: &lastModTime,
+	}
 
-    // Override with provided IsActive if it's not nil
-    if req.IsActive != nil {
-        jurisdiction.IsActive = *req.IsActive
-    }
+	// Override with provided IsActive if it's not nil
+	if req.IsActive != nil {
+		jurisdiction.IsActive = *req.IsActive
+	}
 
-    // Save to database
-    if err := s.repo.Create(ctx, jurisdiction); err != nil {
-        return nil, fmt.Errorf("failed to create jurisdiction: %w", err)
-    }
+	// Save to database
+	if err := s.repo.Create(ctx, jurisdiction); err != nil {
+		return nil, fmt.Errorf("failed to create jurisdiction: %w", err)
+	}
 
-    return toJurisdictionResponse(jurisdiction), nil
+	return toJurisdictionResponse(jurisdiction), nil
 }
 
 func (s *jurisdictionService) validateBoundaryCodes(ctx context.Context, tenantID string, codes []string) error {
@@ -178,7 +179,7 @@ func (s *jurisdictionService) UpdateJurisdiction(ctx context.Context, uuid strin
 	if req.IsActive != nil {
 		existing.IsActive = *req.IsActive
 	}
-	existing.UpdatedAt = time.Now()
+	// existing.LastModifiedTime = time.Now()
 
 	// Save changes
 	if err := s.repo.Update(ctx, existing); err != nil {
@@ -201,8 +202,8 @@ func toJurisdictionResponse(j *models.Jurisdiction) *models.JurisdictionResponse
 		BoundaryRelation: j.BoundaryRelation,
 		IsActive:         j.IsActive,
 		TenantID:         j.TenantID,
-		CreatedAt:        j.CreatedAt,
-		UpdatedAt:        j.UpdatedAt,
+		CreatedTime:      j.CreatedTime,
+		LastModifiedTime: j.LastModifiedTime,
 	}
 }
 
@@ -263,7 +264,7 @@ func (s *jurisdictionService) ReplaceJurisdiction(ctx context.Context, uuid stri
 		existing.IsActive = *req.IsActive
 	}
 
-	existing.UpdatedAt = time.Now()
+	// existing.LastModifiedTime = time.Now()
 
 	// Save changes
 	if err := s.repo.Update(ctx, existing); err != nil {

@@ -48,7 +48,7 @@ func NewEmployeeRepository(db *gorm.DB) EmployeeRepository {
 }
 
 func (r *employeeRepository) Create(ctx context.Context, employee *models.Employee) error {
-	tx := r.db.WithContext(ctx).Create(employee)
+	tx := r.db.WithContext(ctx).Table(models.Employee{}.TableName()).Create(employee)
 	if tx.Error != nil {
 		return errors.Wrap(tx.Error, "DATABASE_ERROR", "failed to create employee")
 	}
@@ -80,7 +80,7 @@ func (r *employeeRepository) FindByUUID(ctx context.Context, uuid, tenantID stri
 }
 
 func (r *employeeRepository) Update(ctx context.Context, employee *models.Employee) error {
-	tx := r.db.WithContext(ctx).Save(employee)
+	tx := r.db.WithContext(ctx).Model(&models.Employee{}).Where("id = ?", employee.ID).Updates(employee)
 	if tx.Error != nil {
 		return errors.Wrap(tx.Error, "DATABASE_ERROR", "failed to update employee")
 	}
@@ -138,7 +138,7 @@ func (r *employeeRepository) Search(ctx context.Context, criteria *models.Employ
 	// Apply sorting
 	orderBy := criteria.SortBy
 	if orderBy == "" {
-		orderBy = "created_at"
+		orderBy = "created_time"
 	}
 
 	orderClause := orderBy

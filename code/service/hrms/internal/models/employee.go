@@ -28,7 +28,7 @@ type Employee struct {
 	LastModifiedBy    *string       `json:"-"`
 	CreatedTime       int64         `json:"createdAt" gorm:"column:created_time;not null"`
 	LastModifiedTime  *int64        `json:"updatedAt,omitempty" gorm:"column:last_modified_time"`
-	DeletedAt         *time.Time    `json:"-" gorm:"index"`
+
 }
 
 // CreateEmployeeRequest represents the request payload for creating an employee

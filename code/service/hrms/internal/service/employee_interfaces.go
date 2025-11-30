@@ -18,7 +18,7 @@ type EmployeeService interface {
 	GetEmployeeByUUID(ctx context.Context, uuid, tenantID string) (*models.EmployeeResponse, error)
 
 	// UpdateEmployee updates an employee by UUID
-	UpdateEmployee(ctx context.Context, uuid string, req *models.UpdateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error)
+	UpdateEmployee(ctx context.Context, uuid string, req *models.CreateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error)
 
 	// HardDeleteEmployee permanently deletes an employee and all related records
 	HardDeleteEmployee(ctx context.Context, uuid, tenantID string) error
@@ -27,8 +27,8 @@ type EmployeeService interface {
 	PatchEmployee(ctx context.Context, uuid string, req *models.UpdateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error)
 
 	// DeactivateEmployee deactivates an employee
-	DeactivateEmployee(ctx context.Context, uuid, tenantID string) (*models.EmployeeResponse, error)
+	DeactivateEmployee(ctx context.Context, uuid string, req *models.DeactivationDetails, tenantID string) (*models.EmployeeResponse, error)
 
 	// ReactivateEmployee reactivates an inactive employee
-	ReactivateEmployee(ctx context.Context, uuid, tenantID string) (*models.EmployeeResponse, error)
+	ReactivateEmployee(ctx context.Context, uuid string, req *models.ReactivationDetails, tenantID string) (*models.EmployeeResponse, error)
 }

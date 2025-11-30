@@ -32,3 +32,11 @@ type DeactivationDetails struct {
 	DeactivatedBy string     `json:"deactivatedBy" binding:"required"`
 	TenantID      string     `json:"tenantId" binding:"required"`
 }
+
+// ReactivationDetails contains information about employee reactivation
+type ReactivationDetails struct {
+	ReasonForReactivation string     `json:"reasonForReactivation" binding:"required"`
+	EffectiveFrom         *time.Time `json:"effectiveFrom" binding:"required"`
+	Remarks               string     `json:"remarks,omitempty"`
+}
+

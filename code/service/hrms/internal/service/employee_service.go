@@ -210,8 +210,8 @@ func (s *employeeService) GetEmployeeByUUID(ctx context.Context, uuid, tenantID 
 	return toEmployeeResponse(employee, s.jurisdictionSvc, tenantID)
 }
 
-// UpdateEmployee updates an employee by UUID
-func (s *employeeService) UpdateEmployee(ctx context.Context, uuid string, req *models.UpdateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error) {
+// UpdateEmployee (PUT) replaces an employee by UUID
+func (s *employeeService) UpdateEmployee(ctx context.Context, uuid string, req *models.CreateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error) {
 	// Get existing employee
 	existing, err := s.repo.FindByUUID(ctx, uuid, tenantID)
 	if err != nil {
@@ -220,6 +220,81 @@ func (s *employeeService) UpdateEmployee(ctx context.Context, uuid string, req *
 		}
 		logrus.WithError(err).Error("Failed to find employee")
 		return nil, errors.Wrap(err, "DATABASE_ERROR", "failed to find employee").WithOperation("UpdateEmployee")
+	}
+
+	// Replace fields
+	existing.Code = req.Code
+	existing.Name = req.Name
+	existing.DateOfBirth = req.DateOfBirth
+	existing.Gender = req.Gender
+	existing.MobileNumber = req.MobileNumber
+	existing.Email = req.Email
+	existing.PanNumber = req.PanNumber
+	existing.AadhaarNumber = req.AadhaarNumber
+	existing.DateOfAppointment = req.DateOfAppointment
+	existing.DateOfRetirement = req.DateOfRetirement
+	existing.DepartmentID = req.DepartmentID
+	existing.DesignationID = req.DesignationID
+	existing.EmployeeType = req.EmployeeType
+	existing.Status = req.Status
+	if req.IsActive != nil {
+		existing.IsActive = *req.IsActive
+	}
+
+	// Update the last_modified_time
+	now := time.Now().Unix()
+	existing.LastModifiedTime = &now
+
+	// Save the updated employee
+	if err := s.repo.Update(ctx, existing); err != nil {
+		logrus.WithError(err).Error("Failed to update employee")
+		return nil, errors.Wrap(err, "DATABASE_ERROR", "failed to update employee").WithOperation("UpdateEmployee")
+	}
+
+	// Return the updated employee
+	return toEmployeeResponse(existing, s.jurisdictionSvc, tenantID)
+}
+
+// HardDeleteEmployee deletes an employee and their jurisdictions
+func (s *employeeService) HardDeleteEmployee(ctx context.Context, uuid, tenantID string) error {
+	// First, find and delete all jurisdictions for this employee
+	criteria := &models.JurisdictionSearchCriteria{
+		EmployeeIDs: []string{uuid},
+		TenantID:    tenantID,
+	}
+	jurs, err := s.jurisdictionSvc.SearchJurisdictions(ctx, criteria)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to fetch jurisdictions for deletion")
+	} else {
+		for _, jur := range jurs {
+			if err := s.jurisdictionSvc.DeleteJurisdiction(ctx, jur.ID, tenantID); err != nil {
+				logrus.WithError(err).Error("Failed to delete jurisdiction")
+			}
+		}
+	}
+
+	// Then delete the employee
+	if err := s.repo.Delete(ctx, uuid, tenantID); err != nil {
+		if errors.Is(err, errors.ErrNotFound) {
+			return errors.ErrNotFound.WithDescription("employee not found").WithOperation("HardDeleteEmployee")
+		}
+		logrus.WithError(err).Error("Failed to delete employee")
+		return errors.Wrap(err, "DATABASE_ERROR", "failed to delete employee").WithOperation("HardDeleteEmployee")
+	}
+
+	return nil
+}
+
+// PatchEmployee updates specific fields of an employee
+func (s *employeeService) PatchEmployee(ctx context.Context, uuid string, req *models.UpdateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error) {
+	// Get existing employee
+	existing, err := s.repo.FindByUUID(ctx, uuid, tenantID)
+	if err != nil {
+		if errors.Is(err, errors.ErrNotFound) {
+			return nil, errors.ErrNotFound.WithDescription("employee not found").WithOperation("PatchEmployee")
+		}
+		logrus.WithError(err).Error("Failed to find employee")
+		return nil, errors.Wrap(err, "DATABASE_ERROR", "failed to find employee").WithOperation("PatchEmployee")
 	}
 
 	// Update fields if they are provided in the request
@@ -275,67 +350,48 @@ func (s *employeeService) UpdateEmployee(ctx context.Context, uuid string, req *
 
 	// Save the updated employee
 	if err := s.repo.Update(ctx, existing); err != nil {
-		logrus.WithError(err).Error("Failed to update employee")
-		return nil, errors.Wrap(err, "DATABASE_ERROR", "failed to update employee").WithOperation("UpdateEmployee")
+		logrus.WithError(err).Error("Failed to patch employee")
+		return nil, errors.Wrap(err, "DATABASE_ERROR", "failed to patch employee").WithOperation("PatchEmployee")
 	}
 
 	// Return the updated employee
 	return toEmployeeResponse(existing, s.jurisdictionSvc, tenantID)
 }
 
-// HardDeleteEmployee deletes an employee and their jurisdictions
-func (s *employeeService) HardDeleteEmployee(ctx context.Context, uuid, tenantID string) error {
-	// First, find and delete all jurisdictions for this employee
-	criteria := &models.JurisdictionSearchCriteria{
-		EmployeeIDs: []string{uuid},
-		TenantID:    tenantID,
-	}
-	jurs, err := s.jurisdictionSvc.SearchJurisdictions(ctx, criteria)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to fetch jurisdictions for deletion")
-	} else {
-		for _, jur := range jurs {
-			if err := s.jurisdictionSvc.DeleteJurisdiction(ctx, jur.ID, tenantID); err != nil {
-				logrus.WithError(err).Error("Failed to delete jurisdiction")
-			}
-		}
-	}
-
-	// Then delete the employee
-	if err := s.repo.Delete(ctx, uuid, tenantID); err != nil {
-		if errors.Is(err, errors.ErrNotFound) {
-			return errors.ErrNotFound.WithDescription("employee not found").WithOperation("HardDeleteEmployee")
-		}
-		logrus.WithError(err).Error("Failed to delete employee")
-		return errors.Wrap(err, "DATABASE_ERROR", "failed to delete employee").WithOperation("HardDeleteEmployee")
-	}
-
-	return nil
-}
-
-// PatchEmployee updates specific fields of an employee
-func (s *employeeService) PatchEmployee(ctx context.Context, uuid string, req *models.UpdateEmployeeRequest, tenantID string) (*models.EmployeeResponse, error) {
-	return s.UpdateEmployee(ctx, uuid, req, tenantID)
-}
-
 // DeactivateEmployee deactivates an employee
-func (s *employeeService) DeactivateEmployee(ctx context.Context, uuid, tenantID string) (*models.EmployeeResponse, error) {
+func (s *employeeService) DeactivateEmployee(ctx context.Context, uuid string, req *models.DeactivationDetails, tenantID string) (*models.EmployeeResponse, error) {
+	// Log the deactivation details
+	logrus.WithFields(logrus.Fields{
+		"employee_id":    uuid,
+		"reason":         req.Reason,
+		"effective_from": req.EffectiveFrom,
+		"remarks":        req.Remarks,
+	}).Info("Deactivating employee")
+
 	// Update status to inactive
 	isActive := false
 	updateReq := &models.UpdateEmployeeRequest{
 		IsActive: &isActive,
 	}
 
-	return s.UpdateEmployee(ctx, uuid, updateReq, tenantID)
+	return s.PatchEmployee(ctx, uuid, updateReq, tenantID)
 }
 
 // ReactivateEmployee reactivates an employee
-func (s *employeeService) ReactivateEmployee(ctx context.Context, uuid, tenantID string) (*models.EmployeeResponse, error) {
+func (s *employeeService) ReactivateEmployee(ctx context.Context, uuid string, req *models.ReactivationDetails, tenantID string) (*models.EmployeeResponse, error) {
+	// Log the reactivation details
+	logrus.WithFields(logrus.Fields{
+		"employee_id":            uuid,
+		"reason_for_reactivation": req.ReasonForReactivation,
+		"effective_from":          req.EffectiveFrom,
+		"remarks":                 req.Remarks,
+	}).Info("Reactivating employee")
+
 	// Update status to active
 	isActive := true
 	updateReq := &models.UpdateEmployeeRequest{
 		IsActive: &isActive,
 	}
 
-	return s.UpdateEmployee(ctx, uuid, updateReq, tenantID)
+	return s.PatchEmployee(ctx, uuid, updateReq, tenantID)
 }

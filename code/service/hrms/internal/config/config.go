@@ -72,7 +72,7 @@ func LoadConfig() (*Config, error) {
 			Port:     getEnvAsInt("DB_PORT", 5432),
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnv("DB_PASSWORD", "1234"),
-			DBName:   getEnv("DB_NAME", "hrms"),
+			DBName:   getEnv("DB_NAME", "hrms_db"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 		IDGen: IDGenConfig{

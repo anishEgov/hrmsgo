@@ -125,7 +125,7 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	var req models.UpdateEmployeeRequest
+	var req models.CreateEmployeeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.handleError(c, http.StatusBadRequest, errors.New("INVALID_REQUEST", err.Error()))
 		return
@@ -219,13 +219,19 @@ func (h *EmployeeHandler) DeactivateEmployee(c *gin.Context) {
 		return
 	}
 
+	var req models.DeactivationDetails
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.handleError(c, http.StatusBadRequest, errors.New("INVALID_REQUEST", err.Error()))
+		return
+	}
+
 	tID, ok := tenantID.(string)
 	if !ok {
 		h.handleError(c, http.StatusInternalServerError, errors.New("INTERNAL_ERROR", "Invalid tenant ID format"))
 		return
 	}
 
-	employee, err := h.service.DeactivateEmployee(c.Request.Context(), id, tID)
+	employee, err := h.service.DeactivateEmployee(c.Request.Context(), id, &req, tID)
 	if err != nil {
 		h.handleError(c, http.StatusInternalServerError, err)
 		return
@@ -247,13 +253,19 @@ func (h *EmployeeHandler) ReactivateEmployee(c *gin.Context) {
 		return
 	}
 
+	var req models.ReactivationDetails
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.handleError(c, http.StatusBadRequest, errors.New("INVALID_REQUEST", err.Error()))
+		return
+	}
+
 	tID, ok := tenantID.(string)
 	if !ok {
 		h.handleError(c, http.StatusInternalServerError, errors.New("INTERNAL_ERROR", "Invalid tenant ID format"))
 		return
 	}
 
-	employee, err := h.service.ReactivateEmployee(c.Request.Context(), id, tID)
+	employee, err := h.service.ReactivateEmployee(c.Request.Context(), id, &req, tID)
 	if err != nil {
 		h.handleError(c, http.StatusInternalServerError, err)
 		return
