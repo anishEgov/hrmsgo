@@ -1,0 +1,454 @@
+{
+	"info": {
+		"_postman_id": "b9b8c06a-5c2a-4d80-a385-3608c7a5cf5e",
+		"name": "HRMS API v3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35025473",
+		"_collection_link": "https://orange-crescent-418337.postman.co/workspace/digit3.0~8b9c2224-29cd-4eee-a007-89e233ffe6b4/collection/35025473-b9b8c06a-5c2a-4d80-a385-3608c7a5cf5e?action=share&source=collection_link&creator=35025473"
+	},
+	"item": [
+		{
+			"name": "Employees",
+			"item": [
+				{
+					"name": "Create Employees",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"code\": \"EMP001\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"mobileNumber\": \"+1234567890\",\n    \"jurisdictions\": [\n      {\n        \"boundaryType\": \"STATE\",\n        \"boundaryCode\": \"KA\",\n        \"isActive\": true\n      }\n    ]\n  }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Employees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3?limit=10&offset=0",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Employee by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Employee",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch Employee",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.patched@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Employee resigned\",\n  \"effectiveFrom\": \"2023-11-27T00:00:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}/deactivate",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reactivate Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Rehired\",\n  \"effectiveFrom\": \"2023-11-27T00:00:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/{{employee_id}}/reactivate",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"{{employee_id}}",
+								"reactivate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Jurisdictions",
+			"item": [
+				{
+					"name": "Get Jurisdiction",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/hrms/hrms/employees/v3/jurisdictions/{{jurisdictionUuid}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"hrms",
+								"employees",
+								"v3",
+								"jurisdictions",
+								"{{jurisdictionUuid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Jurisdiction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeId\": \"{{employee_id}}\",\n  \"boundaryType\": \"DISTRICT\",\n  \"boundaryCode\": \"BLR\",\n  \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/jurisdictions",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"jurisdictions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Jurisdictions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "pg",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/jurisdictions?employeeId={{employee_id}}",
+							"host": [
+								"http://localhost:8080"
+							],
+							"path": [
+								"employees",
+								"v3",
+								"jurisdictions"
+							],
+							"query": [
+								{
+									"key": "employeeId",
+									"value": "{{employee_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Jurisdictions",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "test-tenant"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeId\": \"{{employee_id}}\",\n  \"boundaryType\": \"DISTRICT\",\n  \"boundaryCode\": \"MYS\",\n  \"isActive\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/hrms/employees/v3/jurisdictions/{{jurisdiction_uuid}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"employees",
+								"v3",
+								"jurisdictions",
+								"{{jurisdiction_uuid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/health",
+					"host": [
+						"http://localhost:8080"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

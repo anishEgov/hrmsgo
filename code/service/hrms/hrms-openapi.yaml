@@ -1,0 +1,738 @@
+openapi: 3.0.3
+info:
+  title: DIGIT HRMS – Employee Service API
+  version: 3.0.0
+  description: |
+    REST APIs to manage employees in the DIGIT HRMS system.
+    This module provides CRUD and lifecycle operations for employees,
+    including jurisdictions, assignments, service history, education, and document records.
+
+servers:
+  - url: https://api.example.com/
+    description: Production
+  - url: https://staging.example.com/
+    description: Staging
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Employee
+    description: Manage employee registry and lifecycle
+  - name: Jurisdictions
+    description: Manage jurisdiction records
+
+paths:
+
+  /employees/v3:
+    post:
+      tags: [Employee]
+      summary: Create one or more employees
+      operationId: createEmployees
+      description: |
+        Creates one or more employees. `
+        Id` inside payload is ignored and taken from header.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+      responses:
+        '201':
+          description: Employees created
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Conflict (duplicate user/employee details)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    get:
+      tags: [Employee]
+      summary: Search employees
+      operationId: searchEmployees
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - in: query
+          name: uuids
+          schema:
+            type: array
+            items: { type: string, format: uuid }
+          style: form
+          explode: true
+        - in: query
+          name: codes
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: departments
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: designations
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: phone
+          schema:
+            type: string
+            pattern: '^[6-9][0-9]{9}$'
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Employees found
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+
+  /employees/v3/{id}:
+    get:
+      tags: [Employee]
+      summary: Get employee by UUID
+      operationId: getEmployeeByUUID
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Employee found
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    put:
+      tags: [Employee]
+      summary: Replace employee by UUID
+      operationId: updateEmployee
+      description: Full replace update using the provided UUID.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Employee' }
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [Employee]
+      summary: Permanently delete an employee
+      description: |
+        Permanently deletes an employee record from the system.
+        This operation is irreversible. All child records (jurisdictions, documents, education,
+        tests, service history) must be pre-validated or removed as per service logic.
+
+      operationId: hardDeleteEmployee
+
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+
+        - name: id
+          in: path
+          required: true
+          description: Unique employee UUID
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '204':
+          description: Employee deleted successfully
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+
+        '404':
+          description: Employee not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '409':
+          description: Employee cannot be deleted due to existing child references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+    patch:
+      tags: [Employee]
+      summary: Partially update employee fields
+      operationId: patchEmployee
+      description: Allows partial update of mutable fields.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeePatch'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '404':
+          description: Employee not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+
+  /employees/v3/{id}:deactivate:
+    post:
+      tags: [Employee]
+      summary: Deactivate an employee
+      operationId: deactivateEmployee
+      description: Deactivates an employee (e.g. resignation, termination).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeactivationDetails' }
+      responses:
+        '200':
+          description: Employee deactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '404':
+          description: Employee not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+
+  /employees/v3/{id}:reactivate:
+    post:
+      tags: [Employee]
+      summary: Reactivate employee
+      operationId: reactivateEmployee
+      description: Enables an inactive employee again.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReactivationDetails' }
+      responses:
+        '200':
+          description: Employee reactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+#########################################################################
+
+  /employees/v3/jurisdictions:
+    post:
+      tags: [Jurisdictions]
+      summary: Create a jurisdiction
+      operationId: createJurisdiction
+      description: |
+        Creates a new jurisdiction for a tenant.
+        `tenantId` in payload is ignored and derived from the header.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jurisdiction]
+              properties:
+                jurisdiction:
+                  $ref: '#/components/schemas/Jurisdiction'
+      responses:
+        '201':
+          description: Jurisdiction created
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jurisdiction'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Duplicate jurisdiction record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    get:
+      tags: [Jurisdictions]
+      summary: Search jurisdictions
+      operationId: searchJurisdictions
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - in: query
+          name: ids
+          schema:
+            type: array
+            items: { type: string, format: uuid }
+        - in: query
+          name: employeeId
+          schema: { type: string, format: uuid }
+          description: Filter by employee UUID
+
+        - in: query
+          name: employeeIds
+          schema:
+            type: array
+            items: { type: string, format: uuid }
+          style: form
+          explode: true
+          description: Filter multiple employees' jurisdictions
+
+        - in: query
+          name: isActive
+          schema: { type: boolean }
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Jurisdictions found
+          headers:
+            X-Response-Time: { $ref: '#/components/headers/X-Response-Time' }
+            X-Response-Timestamp: { $ref: '#/components/headers/X-Response-Timestamp' }
+            X-Request-ID: { $ref: '#/components/headers/X-Request-ID' }
+            X-Correlation-ID: { $ref: '#/components/headers/X-Correlation-ID' }
+            X-Tenant-ID: { $ref: '#/components/headers/X-Tenant-ID' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jurisdiction'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+
+
+  /employees/v3/jurisdictions/{uuid}:
+    get:
+      tags: [Jurisdictions]
+      summary: Get jurisdiction by UUID
+      operationId: getJurisdictionByUUID
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Jurisdiction found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jurisdiction' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    put:
+      tags: [Jurisdictions]
+      summary: Replace jurisdiction
+      operationId: replaceJurisdiction
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ClientId'
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jurisdiction]
+              properties:
+                jurisdiction:
+                  $ref: '#/components/schemas/Jurisdiction'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jurisdiction' }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+
+
+components:
+
+  securitySchemes:
+    BearerAuth:
+      $ref: 'https://raw.githubusercontent.com/egovernments/DIGIT-3.0/master/common-3.0.0.yaml#/components/securitySchemes/BearerAuth'
+
+  parameters:
+    RequestIdHeader:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/RequestIdHeader'
+    CorrelationIdHeader:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/CorrelationIdHeader'
+    UserAgentHeader:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/UserAgentHeader'
+    TenantIdHeader:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/TenantIdHeader'
+    ForwardedForHeader:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/ForwardedForHeader'
+    ClientId:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/ClientId'
+    ClientSecret:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/ClientSecret'
+    TimeStamp:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/parameters/TimeStamp'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: Prevent duplicate create on retry
+      schema: { type: string, minLength: 8, maxLength: 128 }
+
+  headers:
+    X-Response-Time:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/headers/X-Response-Time'
+    X-Response-Timestamp:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/headers/X-Response-Timestamp'
+    X-Request-ID:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/headers/X-Request-ID'
+    X-Correlation-ID:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/headers/X-Correlation-ID'
+    X-Tenant-ID:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/headers/X-Tenant-ID'
+
+  schemas:
+
+    AuditDetails:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/refs/heads/master/docs/services/common/Common-3.0.0.yaml#/components/schemas/AuditDetail'
+
+    Error:
+      $ref: 'https://raw.githubusercontent.com/digitnxt/digit3/master/docs/services/common/Common-3.0.0.yaml#/components/schemas/Error'
+
+    
+
+    
+    EmployeePatch:
+      type: object
+      description: Fields allowed for partial update
+      properties:
+        employeeStatus:
+          type: string
+        employeeType:
+          type: string
+        phone:
+          type: string
+          pattern: '^[6-9][0-9]{9}$'
+        emailId:
+          type: string
+          format: email
+        isActive:
+          type: boolean
+
+    Employee:
+      type: object
+      description: |
+        Represents an employee in the HRMS system.
+        User and role details are stored in User-Service, referenced here by `userId`.
+      required:
+        - id
+        - employeeType
+        - department
+        - designation
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique UUID of the employee
+        code:
+          type: string
+          description: Unique code identifier for the employee
+          minLength: 2
+          maxLength: 64
+        userId:
+          type: string
+          description: UUID of user in user service
+        individualId:
+          type: string
+          description: DID from individual service
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+          description: Current status of the employee
+        employeeType:
+          type: string
+          enum: [PERMANENT, CONTRACT, TEMPORARY]
+          description: Type of employment
+        dateOfAppointment:
+          type: string
+          format: date-time
+          description: Appointment date of the employee
+        department:
+          type: string
+          description: Department code of the employee
+        designation:
+          type: string
+          description: Designation code of the employee
+        isActive:
+          type: boolean
+          default: true
+          description: Indicates whether the employee is active
+        jurisdictions:
+          type: array
+          items: { $ref: '#/components/schemas/Jurisdiction' }
+        auditDetails:
+          $ref: '#/components/schemas/AuditDetails'
+
+      x-businessRules:
+        - tenantId must come only from header
+        - employee.code must be unique for tenant
+        - at least one active assignment recommended
+
+    
+
+    DeactivationDetails:
+      type: object
+      properties:
+        reasonForDeactivation:
+          type: string
+          minLength: 2
+          maxLength: 256
+        effectiveFrom:
+          type: string
+          format: date-time
+        remarks:
+          type: string
+
+    ReactivationDetails:
+      type: object
+      properties:
+        reasonForReactivation:
+          type: string
+          minLength: 2
+          maxLength: 256
+        effectiveFrom:
+          type: string
+          format: date-time
+        remarks:
+          type: string
+    
+    Jurisdiction:
+      type: object
+      description: Represents an organisational jurisdiction within the HRMS system.
+      required:
+        - employeeId
+        - boundaryRelation
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique jurisdiction identifier
+          readOnly: true
+          writeOnly: false
+        employeeId:
+          type: string
+          format: uuid
+          description: Id of the employee to whom this jurisdiction belongs
+        boundaryRelation:
+          type: array
+          items: 
+            type: string
+          description: Boundary Relationship id refered from boundary service
+        isActive:
+          type: boolean
+          default: true
+          description: Indicates whether jurisdiction is active
+        auditDetail:
+          $ref: '#/components/schemas/AuditDetails'
+
+      x-businessRules:
+        - Boundary relation must exist in Boundary service
