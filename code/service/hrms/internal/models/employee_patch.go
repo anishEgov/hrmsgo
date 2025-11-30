@@ -24,13 +24,9 @@ type EmployeePatch struct {
 
 // DeactivationDetails contains information about employee deactivation
 type DeactivationDetails struct {
-	ID            string     `json:"id"`
-	EmployeeID    string     `json:"employeeId" binding:"required"`
-	EffectiveFrom *time.Time `json:"effectiveFrom" binding:"required"`
-	Reason        string     `json:"reason" binding:"required"`
-	Remarks       string     `json:"remarks,omitempty"`
-	DeactivatedBy string     `json:"deactivatedBy" binding:"required"`
-	TenantID      string     `json:"tenantId" binding:"required"`
+	ReasonForDeactivation string     `json:"reasonForDeactivation" binding:"required"`
+	EffectiveFrom         *time.Time `json:"effectiveFrom" binding:"required"`
+	Remarks               string     `json:"remarks,omitempty"`
 }
 
 // ReactivationDetails contains information about employee reactivation

@@ -13,5 +13,6 @@ type JurisdictionService interface {
 	DeleteJurisdiction(ctx context.Context, id, tenantID string) error
 	SearchJurisdictions(ctx context.Context, criteria *models.JurisdictionSearchCriteria) ([]*models.JurisdictionResponse, error)
 	GetJurisdictionByUUID(ctx context.Context, uuid, tenantID string) (*models.JurisdictionResponse, error)
+	GetJurisdictionsByEmployeeID(ctx context.Context, employeeID, tenantID string) ([]*models.JurisdictionResponse, error)
 	ReplaceJurisdiction(ctx context.Context, uuid string, req *models.UpdateJurisdictionRequest, tenantID string) (*models.JurisdictionResponse, error)
 }

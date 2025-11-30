@@ -33,6 +33,9 @@ type EmployeeRepository interface {
 
 	// EmployeeCodeExists checks if an employee with the given code already exists
 	EmployeeCodeExists(ctx context.Context, code, tenantID string) (bool, error)
+
+	// UpdateIsActive updates the is_active status of an employee
+	UpdateIsActive(ctx context.Context, id string, isActive bool, tenantID string) error
 }
 
 // employeeRepository implements the EmployeeRepository interface
@@ -195,4 +198,18 @@ func (r *employeeRepository) EmployeeCodeExists(ctx context.Context, code, tenan
 	}
 
 	return count > 0, nil
+}
+
+// UpdateIsActive updates the is_active status of an employee
+func (r *employeeRepository) UpdateIsActive(ctx context.Context, id string, isActive bool, tenantID string) error {
+	err := r.db.WithContext(ctx).Model(&models.Employee{}).
+		Where("id = ? AND tenant_id = ?", id, tenantID).
+		Update("is_active", isActive).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.ErrNotFound.WithDescription("employee not found")
+		}
+		return errors.Wrap(err, "DATABASE_ERROR", "failed to update employee status")
+	}
+	return nil
 }
